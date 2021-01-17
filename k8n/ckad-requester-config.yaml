@@ -5,11 +5,19 @@ metadata:
 data:
   appsettings.json: |-
     {
+        "Logging": {
+            "LogLevel": {
+              "Default": "Information",
+              "Microsoft": "Warning",
+              "Microsoft.Hosting.Lifetime": "Information",
+              "System.Net.Http.HttpClient": "Error"
+            }
+        },
         "Worker": {
             "Websites": [
               {
-                "Url": "http://plus-node-js-express-service:8080/plus?left=0.1&right=0.2",
-                "NumberOfThreads": 10
+                "Url": "http://plus-node-js-express-service:8085/plus?left=0.1&right=0.2",
+                "NumberOfThreads": 20
               }
             ]
         }
