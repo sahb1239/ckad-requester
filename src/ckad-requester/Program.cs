@@ -1,3 +1,4 @@
+using ckad_requester.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -19,6 +20,8 @@ namespace ckad_requester
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<Worker>();
+                    services.AddHttpClient();
+                    services.Configure<WorkerConfiguration>(hostContext.Configuration.GetSection("worker"));
                 });
     }
 }
