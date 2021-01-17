@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ckad-requester-deployment
+  labels:
+    app: ckad-requester
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ckad-requester
+  template:
+    metadata:
+      labels:
+        app: ckad-requester
+    spec:
+      containers:
+      - name: ckad-requester
+        image: sahb/ckad-requester:latest
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: ckad-requester-config
