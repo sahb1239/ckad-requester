@@ -69,7 +69,10 @@ namespace ckad_requester
 
         private async Task RunRequests(WebsiteConfiguration configuration, CancellationToken token)
         {
-            var channel = Channel.CreateUnbounded<Response>();
+            var channel = Channel.CreateUnbounded<Response>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+            });
 
             // Create request tasks
             for (int i = 0; i < configuration.NumberOfThreads; i++)
