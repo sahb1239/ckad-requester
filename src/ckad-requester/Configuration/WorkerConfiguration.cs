@@ -10,10 +10,4 @@ namespace ckad_requester.Configuration
     {
         public IEnumerable<WebsiteConfiguration> Websites { get; set; }
     }
-
-    public class WebsiteConfiguration
-    {
-        public string Url { get; set; }
-        public int NumberOfThreads { get; set; }
-    }
 }

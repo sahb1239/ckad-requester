@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Channels;
@@ -34,6 +35,9 @@ namespace ckad_requester
                 shouldRestart = true;
             });
 
+            // OnChange does not work on Kubernetes ConfigMap :(
+            var currentValues = workerConfiguration.CurrentValue;
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 if (shouldRestart)
@@ -42,10 +46,16 @@ namespace ckad_requester
                     _logger.LogInformation("Restarting...");
                     token?.Cancel();
                     token = new CancellationTokenSource();
+                    currentValues = workerConfiguration.CurrentValue;
 
                     await StartRequests(token.Token);
                 }
                 await Task.Delay(1000, stoppingToken);
+
+                if (!currentValues.Websites.SequenceEqual(workerConfiguration.CurrentValue.Websites))
+                {
+                    shouldRestart = true;
+                }
             }
         }
 
