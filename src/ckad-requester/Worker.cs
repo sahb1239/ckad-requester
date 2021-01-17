@@ -15,25 +15,45 @@ namespace ckad_requester
     {
         private readonly ILogger<Worker> _logger;
         private readonly IHttpClientFactory clientFactory;
-        private readonly WorkerConfiguration workerConfiguration;
+        private readonly IOptionsMonitor<WorkerConfiguration> workerConfiguration;
 
-        public Worker(ILogger<Worker> logger, IHttpClientFactory clientFactory, IOptions<WorkerConfiguration> workerConfiguration)
+        public Worker(ILogger<Worker> logger, IHttpClientFactory clientFactory, IOptionsMonitor<WorkerConfiguration> workerConfiguration)
         {
             _logger = logger;
             this.clientFactory = clientFactory;
-            this.workerConfiguration = workerConfiguration.Value;
+            this.workerConfiguration = workerConfiguration;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            foreach (var configuration in workerConfiguration.Websites)
+            bool shouldRestart = true;
+            CancellationTokenSource token = null;
+
+            workerConfiguration.OnChange((configuration) =>
             {
-                await Task.Factory.StartNew(() => RunRequests(configuration, stoppingToken), TaskCreationOptions.LongRunning);
-            }
+                shouldRestart = true;
+            });
 
             while (!stoppingToken.IsCancellationRequested)
             {
+                if (shouldRestart)
+                {
+                    shouldRestart = false;
+                    _logger.LogInformation("Restarting...");
+                    token?.Cancel();
+                    token = new CancellationTokenSource();
+
+                    await StartRequests(token.Token);
+                }
                 await Task.Delay(1000, stoppingToken);
+            }
+        }
+
+        private async Task StartRequests(CancellationToken token)
+        {
+            foreach (var configuration in workerConfiguration.CurrentValue.Websites)
+            {
+                await Task.Factory.StartNew(() => RunRequests(configuration, token), TaskCreationOptions.LongRunning);
             }
         }
 
