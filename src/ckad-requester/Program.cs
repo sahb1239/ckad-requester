@@ -24,7 +24,6 @@ namespace ckad_requester
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddSingleton<IConfigurationRoot>((IConfigurationRoot)hostContext.Configuration);
                     services.AddHostedService<Worker>();
                     services.AddHttpClient();
                     services.Configure<WorkerConfiguration>(hostContext.Configuration.GetSection("worker"));
