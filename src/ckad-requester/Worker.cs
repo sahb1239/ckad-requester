@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace ckad_requester
 {
@@ -17,12 +18,14 @@ namespace ckad_requester
         private readonly ILogger<Worker> _logger;
         private readonly IHttpClientFactory clientFactory;
         private readonly IOptionsMonitor<WorkerConfiguration> workerConfiguration;
+        private readonly IConfigurationRoot _configurationRoot;
 
-        public Worker(ILogger<Worker> logger, IHttpClientFactory clientFactory, IOptionsMonitor<WorkerConfiguration> workerConfiguration)
+        public Worker(ILogger<Worker> logger, IHttpClientFactory clientFactory, IOptionsMonitor<WorkerConfiguration> workerConfiguration, IConfigurationRoot configurationRoot)
         {
             _logger = logger;
             this.clientFactory = clientFactory;
             this.workerConfiguration = workerConfiguration;
+            _configurationRoot = configurationRoot;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,14 +46,15 @@ namespace ckad_requester
                 if (shouldRestart)
                 {
                     shouldRestart = false;
-                    _logger.LogInformation("Restarting...");
+                    _logger.LogInformation("Restarting worker...");
                     token?.Cancel();
                     token = new CancellationTokenSource();
                     currentValues = workerConfiguration.CurrentValue;
 
                     await StartRequests(token.Token);
                 }
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(10000, stoppingToken);
+                _configurationRoot.Reload();
 
                 if (!currentValues.Websites.SequenceEqual(workerConfiguration.CurrentValue.Websites))
                 {
